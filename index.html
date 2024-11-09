@@ -54,16 +54,19 @@
     </style>
 </head>
 <body>
+    <!-- Registration Section -->
     <div id="register-section">
         <h2>Register Passkey</h2>
         <button onclick="registerPasskey()">Register Fingerprint</button>
     </div>
 
+    <!-- Authentication Section -->
     <div id="auth-section" style="display: none;">
-        <h2>Authenticating...</h2>
-        <p>Please use your fingerprint to unlock.</p>
+        <h2>Fingerprint Authentication</h2>
+        <button onclick="authenticate()">Use Fingerprint to Unlock</button>
     </div>
 
+    <!-- Form Section -->
     <div id="form-section" style="display: none;">
         <h2>Student Information Form</h2>
         <form id="student-form">
@@ -81,15 +84,16 @@
     </div>
 
     <script>
+        let credentialID; // Variable to store the registered credential ID
+
+        // Register a new passkey
         async function registerPasskey() {
             try {
-                // Check for WebAuthn support
                 if (!window.PublicKeyCredential) {
                     alert("Web Authentication API is not supported in this browser.");
                     return;
                 }
 
-                // Registration options for passkey creation
                 const options = {
                     challenge: Uint8Array.from("registration-challenge", c => c.charCodeAt(0)),
                     rp: { name: "Demo Website" },
@@ -103,14 +107,13 @@
                     timeout: 60000
                 };
 
-                // Register passkey
                 const credential = await navigator.credentials.create({ publicKey: options });
                 
                 if (credential) {
+                    credentialID = credential.rawId; // Store the credential ID
                     alert("Passkey registered successfully! You can now use it to authenticate.");
                     document.getElementById("register-section").style.display = "none";
                     document.getElementById("auth-section").style.display = "block";
-                    authenticate(); // Immediately attempt authentication after registration
                 }
             } catch (error) {
                 console.error("Registration failed:", error);
@@ -118,30 +121,33 @@
             }
         }
 
+        // Authenticate using the registered passkey
         async function authenticate() {
             try {
-                // Authentication options using the registered passkey
+                if (!credentialID) {
+                    alert("No registered passkey found. Please register first.");
+                    return;
+                }
+
                 const options = {
                     challenge: Uint8Array.from("authentication-challenge", c => c.charCodeAt(0)),
                     allowCredentials: [{
-                        id: new Uint8Array(16), // Replace with the actual credential ID from registration
+                        id: new Uint8Array(credentialID), // Use the stored credential ID
                         type: "public-key",
                     }],
                     timeout: 60000,
                     userVerification: "required",
                 };
 
-                // Trigger WebAuthn authentication
                 const assertion = await navigator.credentials.get({ publicKey: options });
                 
                 if (assertion) {
-                    // Authentication succeeded, show form
                     document.getElementById("auth-section").style.display = "none";
                     document.getElementById("form-section").style.display = "block";
                 }
             } catch (error) {
                 console.error("Authentication failed:", error);
-                alert("Fingerprint authentication failed. Please refresh the page to try again.");
+                alert("Fingerprint authentication failed. Please try again.");
             }
         }
     </script>
