@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fingerprint Auth for Student Form</title>
+    <title>Fingerprint Authentication for Student Form</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,8 +55,8 @@
 </head>
 <body>
     <div id="auth-section">
-        <h2>Fingerprint Authentication</h2>
-        <button onclick="authenticate()">Unlock with Fingerprint</button>
+        <h2>Authenticating...</h2>
+        <p>Please use your fingerprint to unlock.</p>
     </div>
 
     <div id="form-section" style="display: none;">
@@ -76,6 +76,9 @@
     </div>
 
     <script>
+        // Automatically attempt authentication on page load
+        window.onload = authenticate;
+
         async function authenticate() {
             try {
                 // Check for WebAuthn support
@@ -105,7 +108,7 @@
                 }
             } catch (error) {
                 console.error("Authentication failed:", error);
-                alert("Fingerprint authentication failed. Please try again.");
+                alert("Fingerprint authentication failed. Please refresh the page to try again.");
             }
         }
     </script>
