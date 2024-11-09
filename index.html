@@ -16,7 +16,7 @@
             background-color: #f4f4f9;
         }
 
-        #auth-section, #form-section {
+        #auth-section, #form-section, #register-section {
             width: 300px;
             padding: 20px;
             text-align: center;
@@ -54,7 +54,12 @@
     </style>
 </head>
 <body>
-    <div id="auth-section">
+    <div id="register-section">
+        <h2>Register Passkey</h2>
+        <button onclick="registerPasskey()">Register Fingerprint</button>
+    </div>
+
+    <div id="auth-section" style="display: none;">
         <h2>Authenticating...</h2>
         <p>Please use your fingerprint to unlock.</p>
     </div>
@@ -76,10 +81,7 @@
     </div>
 
     <script>
-        // Automatically attempt authentication on page load
-        window.onload = authenticate;
-
-        async function authenticate() {
+        async function registerPasskey() {
             try {
                 // Check for WebAuthn support
                 if (!window.PublicKeyCredential) {
@@ -87,11 +89,42 @@
                     return;
                 }
 
-                // WebAuthn options for authentication
+                // Registration options for passkey creation
                 const options = {
-                    challenge: Uint8Array.from("challenge-string", c => c.charCodeAt(0)),
+                    challenge: Uint8Array.from("registration-challenge", c => c.charCodeAt(0)),
+                    rp: { name: "Demo Website" },
+                    user: {
+                        id: Uint8Array.from("user-id", c => c.charCodeAt(0)),
+                        name: "user@example.com",
+                        displayName: "User Example"
+                    },
+                    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+                    authenticatorSelection: { userVerification: "required" },
+                    timeout: 60000
+                };
+
+                // Register passkey
+                const credential = await navigator.credentials.create({ publicKey: options });
+                
+                if (credential) {
+                    alert("Passkey registered successfully! You can now use it to authenticate.");
+                    document.getElementById("register-section").style.display = "none";
+                    document.getElementById("auth-section").style.display = "block";
+                    authenticate(); // Immediately attempt authentication after registration
+                }
+            } catch (error) {
+                console.error("Registration failed:", error);
+                alert("Passkey registration failed. Please try again.");
+            }
+        }
+
+        async function authenticate() {
+            try {
+                // Authentication options using the registered passkey
+                const options = {
+                    challenge: Uint8Array.from("authentication-challenge", c => c.charCodeAt(0)),
                     allowCredentials: [{
-                        id: new Uint8Array(16), // Replace with actual user ID from server
+                        id: new Uint8Array(16), // Replace with the actual credential ID from registration
                         type: "public-key",
                     }],
                     timeout: 60000,
